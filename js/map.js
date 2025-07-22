@@ -7,12 +7,46 @@ let bottom5 = [];
 //Function to Assign based on ranking
 function getColor(rank) {
     return rank <= 3 ? "#1b4e4f"
-    : rank <= 6 ? "2a6d5e"
+    : rank <= 6 ? "#2a6d5e"
     : rank <=9 ? "#3f816b"
     : rank <=12 ? "#5c9a79"
     : rank <=15 ? "#7ab18a"
     : rank<=18 ? "#c1d9c0"
     : "#dddddd"; //default grey for lowest category
+}
+
+//Populate the dropdown with local area/neigbhourhood names
+function populateDropdown(data) {
+    const dropdown = document.getElementById("neighbourhood-dropdown");
+    dropdown.innerHTML = ""; //Clear any existing options
+
+    //Sort features alphabetically by NAME
+    data.features.sort((a,b) => a.properties.name.localeCompare(b.properties.name));
+
+    //create <option> elements for each local area/neighbourhood
+    data.features.forEach(f => {
+        const option = document.createElement("option");
+        option.value = f.properties.fid;
+        option.textContent = f.properties.name;
+        dropdown.appendChild(option);
+    })
+
+    //add event listener to zoom on selection
+    dropdown.addEventListener("change", () => {
+        const id = Number(dropdown.value);
+        const match = data.features.find(f => f.properties.fid == id);
+        if(match) zoomToNeighbourhood(match);
+    });
+}
+
+//zoom map to selected neighourhood feature
+function zoomToNeighbourhood(f) {
+    geoJsonLayer.eachLayer(layer => {
+        if (layer.feature.properties.fid === f.properties.fid) {
+            map.fitBounds(layer.getBounds());
+            layer.openPopup();
+        }
+    })
 }
 
 //Load GeoJSON and initialize map
@@ -34,6 +68,8 @@ document.addEventListener("DOMContentLoaded", function () {
             attribution : '&copy; <a href="https://stadiamaps.com/">Stadia Maps</a>, ' + '&copy; <a href="https://stamen.com/">Stamen Design</a>, ' + '&copy; <a href="https://openmaptiles.org/">OpenMapTiles</a>, ' + '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
     }).addTo(map);
 
+    populateDropdown(data);
+
     //Add GeoJSON  to map
     geoJsonLayer = L.geoJSON(data, {
         style: f=> ({
@@ -51,5 +87,44 @@ document.addEventListener("DOMContentLoaded", function () {
             }) ;
         }
     }).addTo(map);
+
+    //Add reset button to reset zoom
+    const resetControl = L.control({ position: "topleft"});
+    resetControl.onAdd = () => {
+        const div = L.DomUtil.create("div", "leaflet-bar leaflet-control leaflet-control-custom");
+        div.innerHTML = '🔄';
+        Object.assign(div.style, {
+            backgroundColor: "white",
+            width: "1.875rem",
+            height: "1.875rem",
+            lineHeight: "1.875rem",
+            textAlign: "center",
+            cursor: "pointer",
+            fontSize: "1.25rem",
+            boxShadow: "0 1px 3px rgba(0,0,0,0.3)"
+        });
+        div.onclick = () => {
+            const bounds = geoJsonLayer.getBounds();
+            if(bounds.isValid()) {
+                map.fitBounds(bounds, { padding: [20, 20]});
+            }
+        };
+        return div
+    };
+    resetControl.addTo(map);
+
+    //Add legend to explain color scheme
+    const legend = L.control({ position: "bottomleft" });
+    legend.onAdd = () => {
+        const div = L.DomUtil.create("div", "info legend");
+        const grades = [1, 4, 7, 10, 13, 16, 19];
+        div.innerHTML = "<h4>Neighbourhood Rank<br><small>(1=best)</small></h4>" + grades.map((from, i) => {
+            const to = grades[i+1] - 1;
+            return `<i style="background:${getColor(from)}"></i> ${from}${to ? "-" + to : "+"}`;
+        }).join("<br>");
+        return div
+    };
+    legend.addTo(map);
 })
+    .catch(err => console.error("GeoJSON load error: ", err));
 });
