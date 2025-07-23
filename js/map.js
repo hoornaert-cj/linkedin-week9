@@ -98,14 +98,30 @@ document.addEventListener("DOMContentLoaded", function () {
             return
         }
 
-        //Create Leaflet map
-        map = L.map("map").setView([49.254, -123.127], 12);
-
         //Add tile layer
-        L.tileLayer("https://tiles.stadiamaps.com/tiles/stamen_terrain/{z}/{x}/{y}{r}.png?api_key=22685591-9232-45c7-a495-cfdf0e81ab86", {
+        const lightBase = L.tileLayer("https://tiles.stadiamaps.com/tiles/stamen_terrain/{z}/{x}/{y}{r}.png?api_key=22685591-9232-45c7-a495-cfdf0e81ab86", {
             maxZoom: 18,
             attribution : '&copy; <a href="https://stadiamaps.com/">Stadia Maps</a>, ' + '&copy; <a href="https://stamen.com/">Stamen Design</a>, ' + '&copy; <a href="https://openmaptiles.org/">OpenMapTiles</a>, ' + '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-    }).addTo(map);
+    });
+
+    const darkBase = L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
+        maxZoom: 18,
+        attribution: '&copy; <a href="https://carto.com/">CARTO</a>',
+        subdomains: 'abcd'
+    });
+
+    map = L.map("map", {
+        center: [49.254, -123.127],
+        zoom: 12,
+        layers: [lightBase]
+    });
+
+    const baseMaps = {
+        "Terrain(Light)": lightBase,
+        "Carto Dark: " : darkBase
+    };
+
+    L.control.layers(baseMaps, null, { position: "topright", collapsed: false}).addTo(map);
 
     populateDropdown(data);
 
