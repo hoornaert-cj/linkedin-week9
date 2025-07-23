@@ -46,7 +46,46 @@ function zoomToNeighbourhood(f) {
             map.fitBounds(layer.getBounds());
             layer.openPopup();
         }
+    });
+}
+
+//Highlight the top 5 neighbourhoods
+function highlightTop5() {
+    geoJsonLayer.eachLayer(layer => {
+        if(top5.includes(layer.feature.properties.name)) {
+            layer.setStyle({fillColor: "#FFD700", color: "#ffff", weight: 2, fillOpacity: 0.9});
+            layer.isTop5 = true
+        }
     })
+}
+
+//reset top 5
+function resetTop5() {
+    geoJsonLayer.eachLayer(layer => {
+        if(top5.includes(layer.feature.properties.name)) {
+            layer.isTop5 = false;
+            geoJsonLayer.resetStyle(layer);
+        }
+    });
+}
+
+function highlightBottom5() {
+    geoJsonLayer.eachLayer(layer => {
+        if(bottom5.includes(layer.feature.properties.name)) {
+            layer.setStyle({fillColor: "#8B0000", color: "#ffff", weight: 2, fillOpacity: 0.9});
+            layer.isBottom5 = true;
+        }
+    });
+}
+
+//reset bottom 5
+function resetBottom5() {
+    geoJsonLayer.eachLayer(layer => {
+        if (bottom5.includes(layer.feature.properties.name)) {
+            layer.isBottom5 = false;
+            geoJsonLayer.resetStyle(layer);
+        }
+    });
 }
 
 //Load GeoJSON and initialize map
@@ -69,6 +108,13 @@ document.addEventListener("DOMContentLoaded", function () {
     }).addTo(map);
 
     populateDropdown(data);
+
+    //determine top 5 and bottom 5 neighbourhoods
+    const sorted = data.features.sort((a,b) => a.properties.rank - b.properties.rank);
+    top5 = sorted.slice(0,5).map(f => f.properties.name);
+    const maxRank = Math.max(...data.features.map(f => f.properties.rank));
+    // bottom5 = data.features.filter(f => f.properties.rank >= maxRank - 4).map(f => f.properties.name);
+    bottom5 = sorted.slice(-5).map(f => f.properties.name);
 
     //Add GeoJSON  to map
     geoJsonLayer = L.geoJSON(data, {
@@ -127,4 +173,12 @@ document.addEventListener("DOMContentLoaded", function () {
     legend.addTo(map);
 })
     .catch(err => console.error("GeoJSON load error: ", err));
+});
+
+//event listeners for checkboxes
+document.getElementById("top5").addEventListener("change", function() {
+    this.checked ? highlightTop5() : resetTop5();
+});
+document.getElementById("bottom5").addEventListener("change", function() {
+    this.checked ? highlightBottom5() : resetBottom5();
 });
