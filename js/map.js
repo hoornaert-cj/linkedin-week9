@@ -157,7 +157,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 </div>
                 <div class="popup-body">
                     <p><strong>Equity Rank: </strong> ${feature.properties.rank} out of 22</p>
-                    <p><strong>Population(2016): </strong> ${feature.properties.pop_2015}</p>
+                    <p><strong>Equity Score: </strong> ${feature.properties.equity}</p>
                     <p><strong># of Grocery Stores: </strong> ${feature.properties.cat}</p>
                     <p><strong>Stores per km²: </strong> ${feature.properties.groc_km2}</p>
                 </div>
