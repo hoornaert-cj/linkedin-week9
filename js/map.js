@@ -147,6 +147,45 @@ document.addEventListener("DOMContentLoaded", function () {
                 direction: "top",
                 className: "neighbourhood-tooltip"
             }) ;
+
+        //popup on click
+        layer.bindPopup (`
+            <div class="popup-card">
+                <div class="popup-header">
+                    <img src = "images/maple-leaf.svg" class="popup-icon" />
+                    <h4>${feature.properties.name}</h4>
+                </div>
+                <div class="popup-body">
+                    <p><strong>Equity Rank: </strong> ${feature.properties.rank} out of 22</p>
+                    <p><strong>Population(2016): </strong> ${feature.properties.pop_2015}</p>
+                    <p><strong># of Grocery Stores: </strong> ${feature.properties.cat}</p>
+                    <p><strong>Stores per km²: </strong> ${feature.properties.groc_km2}</p>
+                </div>
+            </div>
+            `);
+
+            //mouse interaction styling
+            layer.on({
+                mouseover: e => e.target.setStyle({
+                    fillColor: "#FEFFBE",
+                    fillOpacity: 0.45,
+                    dashArray: "5,5"
+                }),
+                mouseout: e=> {
+                    const l = e.target;
+                    if(l.isTop5) {
+                        l.setStyle({ fillColor: "#FFD700", color: "#fff", weight: 2, fillOpacity: 0.9});
+                    }else if (l.isBottom5) {
+                        l.setStyle({ fillColor: "#8B0000", color: "#fff", weight: 2, fillOpacity: 0.9})
+                    }else {
+                        geoJsonLayer.resetStyle(l)
+                    }
+                },
+                click: e=> {
+                    e.target.setStyle({ weight: 0, color: "transparent", stroke: false});
+                    setTimeout(() => document.activeElement.blur(), 0);
+                }
+            });
         }
     }).addTo(map);
 
